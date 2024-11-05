@@ -73,7 +73,6 @@ async def update_user_(db: Annotated[Session, Depends(get_db)], user_id: int, up
         "status_code": status.HTTP_200_OK,
         "transaction": "User update is successful"
     }
-    pass
 
 
 @router.delete("/delete")
@@ -86,10 +85,21 @@ async def delete_user(db: Annotated[Session, Depends(get_db)], user_id: int):
         )
 
     db.execute(delete(User).where(User.id == user_id))
+    db.execute(delete(Task).where(Task.user_id == user_id))
 
     db.commit()
     return {
         "status_code": status.HTTP_200_OK,
-        "transaction": "User update is successful"
+        "transaction": "User delete is successful"
     }
-    pass
+
+@router.get("/user_id/tasks")
+async def tasks_by_user_id(db: Annotated[Session, Depends(get_db)], user_id: int):
+    tasks = db.query(Task).filter(Task.user_id == user_id).first()
+    if tasks is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tasks were not found"
+        )
+    else:
+        return tasks
